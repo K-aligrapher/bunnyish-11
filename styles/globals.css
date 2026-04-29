@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Lora:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;600&display=swap');
+
+:root {
+  --cream: #faf6f0;
+  --warm-white: #fff9f2;
+  --ink: #1a1209;
+  --brown: #5c3d1e;
+  --sienna: #a0522d;
+  --gold: #c9963a;
+  --muted: #8a7560;
+  --rule: #d4c5b0;
+  --card-bg: #fffdf9;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'Lora', Georgia, serif;
+  min-height: 100vh;
+}
+
+a { text-decoration: none; color: inherit; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+textarea, input, select { font-family: inherit; }
