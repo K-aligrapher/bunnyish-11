@@ -40,7 +40,7 @@ export default function Home({ posts: initialPosts }) {
         <header className="hdr">
           <div className="hdr-inner">
             <Link href="/" className="brand-link">
-              <span className="bunny-icon">🐰</span>
+              <span className="bunny-icon"></span>
               <h1 className="brand">Bunnyish</h1>
             </Link>
             <nav className="nav">
