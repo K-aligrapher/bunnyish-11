@@ -397,10 +397,19 @@ export default function Home({ posts: initialPosts }) {
 }
 
 export async function getServerSideProps() {
-  const { data: posts, error } = await supabase
-    .from('posts')
-    .select('*')
-    .order('created_at', { ascending: false })
-  if (error) console.error('Supabase error:', error)
-  return { props: { posts: posts ?? [] } }
+  if (!supabase) {
+    console.error('Supabase client not configured — check env vars')
+    return { props: { posts: [] } }
+  }
+  try {
+    const { data: posts, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) console.error('Supabase error:', error)
+    return { props: { posts: posts ?? [] } }
+  } catch (err) {
+    console.error('Supabase fetch failed:', err.message)
+    return { props: { posts: [] } }
+  }
 }

@@ -85,9 +85,10 @@ export default function Write() {
 
   async function handlePublish() {
     if (!form.title.trim() || !form.body.trim()) { setError('Please add at least a title and story body.'); return }
+    if (!supabase) { setError('Supabase not configured. Check your .env.local file.'); return }
     setError(''); setSaving(true)
 
-    // Embed image references into the body text
+    // Save images as text-only references (no base64 in DB to avoid size limits)
     let fullBody = form.body.trim()
     if (images.length > 0) {
       fullBody += '\n\n---IMAGES---\n'
@@ -97,13 +98,24 @@ export default function Write() {
       })
     }
 
-    const { error: dbError } = await supabase.from('posts').insert({
-      title: form.title.trim(), category: form.category,
-      excerpt: form.excerpt.trim() || form.body.trim().slice(0, 90) + '…',
-      body: fullBody, thumb: Math.floor(Math.random() * 6),
-    })
-    if (dbError) { setError('Failed to save. Please try again.'); setSaving(false); return }
-    router.push('/?published=1')
+    try {
+      const { error: dbError } = await supabase.from('posts').insert({
+        title: form.title.trim(), category: form.category,
+        excerpt: form.excerpt.trim() || form.body.trim().slice(0, 90) + '…',
+        body: fullBody, thumb: Math.floor(Math.random() * 6),
+      })
+      if (dbError) {
+        console.error('Supabase insert error:', dbError)
+        setError(`Save failed: ${dbError.message || dbError.code || 'Unknown error'}`)
+        setSaving(false)
+        return
+      }
+      router.push('/?published=1')
+    } catch (err) {
+      console.error('Publish exception:', err)
+      setError(`Network error: ${err.message}`)
+      setSaving(false)
+    }
   }
 
   return (

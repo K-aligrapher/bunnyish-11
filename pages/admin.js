@@ -82,6 +82,11 @@ export default function Admin({ posts: initialPosts }) {
 }
 
 export async function getServerSideProps() {
-  const { data: posts } = await supabase.from('posts').select('id, title, category, created_at').order('created_at', { ascending: false })
-  return { props: { posts: posts ?? [] } }
+  if (!supabase) return { props: { posts: [] } }
+  try {
+    const { data: posts } = await supabase.from('posts').select('id, title, category, created_at').order('created_at', { ascending: false })
+    return { props: { posts: posts ?? [] } }
+  } catch {
+    return { props: { posts: [] } }
+  }
 }
