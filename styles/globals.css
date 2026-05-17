@@ -1,30 +1,106 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Lora:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&family=Quicksand:wght@300;400;500;600;700&family=Nunito:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
 
+/* ═══════════════════════════════════════════
+   LIGHT MODE — Warm Yellow Bunny Theme
+   ═══════════════════════════════════════════ */
 :root {
-  --cream: #faf6f0;
-  --warm-white: #fff9f2;
-  --ink: #1a1209;
-  --brown: #5c3d1e;
-  --sienna: #a0522d;
-  --gold: #c9963a;
-  --muted: #8a7560;
-  --rule: #d4c5b0;
-  --card-bg: #fffdf9;
+  --bg-deep: #fef9ef;
+  --bg-surface: #fff8e8;
+  --bg-card: #ffffff;
+  --bg-elevated: #fff3d6;
+  --bg-hover: #ffeec2;
+  --bg-sidebar: #fff5dc;
+
+  --yellow: #f5c542;
+  --yellow-dark: #d4a327;
+  --yellow-light: #ffe699;
+  --yellow-glow: rgba(245, 197, 66, 0.2);
+  --yellow-warm: #f0d68a;
+  --orange: #e8985a;
+  --brown: #6b4c2a;
+  --brown-light: #8b6b42;
+  --brown-soft: #a08060;
+  --cream: #fef6e0;
+  --pink-nose: #f5a0b0;
+  --blush: #fcc;
+
+  --text-primary: #3a2a14;
+  --text-secondary: #6b5a42;
+  --text-muted: #a0907a;
+  --text-accent: var(--brown);
+
+  --border: rgba(107, 76, 42, 0.1);
+  --border-accent: rgba(245, 197, 66, 0.4);
+
+  --radius: 16px;
+  --radius-lg: 24px;
+  --shadow-card: 0 2px 20px rgba(107, 76, 42, 0.07);
+  --shadow-hover: 0 8px 32px rgba(107, 76, 42, 0.12);
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  --header-bg: rgba(255, 248, 232, 0.9);
+  --gradient-brand: linear-gradient(135deg, #f5c542, #e8985a);
+  --gradient-warm: linear-gradient(135deg, #fef9ef, #fff3d6);
+  --gradient-card: linear-gradient(160deg, #ffffff, #fff8e8);
+  --loader-bg: linear-gradient(180deg, #fef6e0, #fff3d6);
+}
+
+/* ═══════════════════════════════════════════
+   DARK MODE
+   ═══════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg-deep: #1a1610;
+  --bg-surface: #221e16;
+  --bg-card: #2a2418;
+  --bg-elevated: #332c1e;
+  --bg-hover: #3d3424;
+  --bg-sidebar: #252012;
+
+  --yellow: #f5c542;
+  --yellow-dark: #c99a22;
+  --yellow-light: #ffe699;
+  --yellow-glow: rgba(245, 197, 66, 0.15);
+  --orange: #e8985a;
+  --brown: #d4b88a;
+  --brown-light: #c0a070;
+  --brown-soft: #a08868;
+
+  --text-primary: #f0e8d8;
+  --text-secondary: #c0b098;
+  --text-muted: #7a6c58;
+  --text-accent: var(--yellow);
+
+  --border: rgba(245, 197, 66, 0.08);
+  --border-accent: rgba(245, 197, 66, 0.25);
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);
+  --shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.35);
+
+  --header-bg: rgba(34, 30, 22, 0.9);
+  --gradient-brand: linear-gradient(135deg, #f5c542, #e8985a);
+  --gradient-warm: linear-gradient(135deg, #1a1610, #221e16);
+  --gradient-card: linear-gradient(160deg, #2a2418, #221e16);
+  --loader-bg: linear-gradient(180deg, #1a1610, #221e16);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--cream);
-  color: var(--ink);
-  font-family: 'Lora', Georgia, serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Nunito', 'Quicksand', sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.4s ease, color 0.4s ease;
 }
 
 a { text-decoration: none; color: inherit; }
 
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--cream); }
-::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--gradient-brand); border-radius: 3px; }
 
 textarea, input, select { font-family: inherit; }
+
+::selection { background: var(--yellow-glow); color: var(--text-primary); }

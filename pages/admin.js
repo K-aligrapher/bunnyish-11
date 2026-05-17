@@ -18,80 +18,70 @@ export default function Admin({ posts: initialPosts }) {
 
   return (
     <>
-      <Head><title>Admin · The Story Press</title></Head>
+      <Head><title>Admin · Bunnyish</title></Head>
       <div className="root">
         <header className="hdr">
-          <div className="masthead">
-            <h1><Link href="/">The Story Press</Link></h1>
+          <div className="hdr-inner">
+            <Link href="/" className="brand-link"><span>🐰</span><h1 className="brand">Bunnyish</h1></Link>
+            <nav className="nav">
+              <Link href="/" className="nl">Home</Link>
+              <Link href="/write" className="nl">Write</Link>
+              <Link href="/admin" className="nl active">Admin</Link>
+            </nav>
           </div>
-          <nav className="nav">
-            <Link href="/">All Stories</Link>
-            <Link href="/write">Write New</Link>
-            <Link href="/admin" className="active">Admin</Link>
-          </nav>
         </header>
-
         <main className="main">
-          <h2 className="page-title">Manage Stories</h2>
+          <h2 className="title">🛠️ Manage Stories</h2>
           {msg && <div className="msg">{msg}</div>}
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map(p => (
-                <tr key={p.id}>
-                  <td className="title-cell">{p.title}</td>
-                  <td><span className="cat-badge">{p.category}</span></td>
-                  <td className="date-cell">{new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                  <td>
-                    <button className="del-btn" onClick={() => handleDelete(p.id)}>Delete</button>
-                  </td>
-                </tr>
-              ))}
-              {posts.length === 0 && (
-                <tr><td colSpan={4} className="empty">No stories yet.</td></tr>
-              )}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Actions</th></tr></thead>
+              <tbody>
+                {posts.map(p => (
+                  <tr key={p.id}>
+                    <td className="tc">{p.title}</td>
+                    <td><span className="badge">{p.category}</span></td>
+                    <td className="dc">{new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                    <td><button className="del" onClick={() => handleDelete(p.id)}>Delete</button></td>
+                  </tr>
+                ))}
+                {posts.length === 0 && <tr><td colSpan={4} className="empty">No stories yet 🐇</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </main>
       </div>
-
       <style jsx>{`
-        .root { background: var(--cream); min-height: 100vh; }
-        .hdr { background: var(--warm-white); border-bottom: 3px double var(--rule); padding: 0 2rem; }
-        .masthead { text-align: center; padding: 1.4rem 0 1rem; }
-        .masthead h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 900; }
-        .masthead h1 a { color: inherit; }
-        .nav { display: flex; justify-content: center; gap: 2.5rem; padding: .75rem 0 .65rem; border-top: 1px solid var(--rule); }
-        .nav a { font-family: 'Josefin Sans', sans-serif; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--brown); }
-        .nav a:hover, .nav a.active { color: var(--gold); }
-        .main { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
-        .page-title { font-family: 'Playfair Display', serif; font-size: 1.7rem; margin-bottom: 1.5rem; }
-        .msg { font-family: 'Josefin Sans', sans-serif; font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; background: var(--warm-white); border-left: 3px solid var(--gold); padding: .7rem 1rem; margin-bottom: 1.5rem; color: var(--brown); }
+        .root { min-height: 100vh; background: var(--bg-deep); }
+        .hdr { position: sticky; top: 0; z-index: 50; background: var(--header-bg); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0 1.5rem; }
+        .hdr-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 56px; }
+        .brand-link { display: flex; align-items: center; gap: 0.4rem; }
+        .brand { font-family: 'Comfortaa', cursive; font-size: 1.4rem; font-weight: 700; background: var(--gradient-brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .nav { display: flex; gap: 0.25rem; }
+        .nl { font-family: 'Quicksand', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); padding: 0.4rem 0.9rem; border-radius: 10px; transition: var(--transition); }
+        .nl:hover { color: var(--text-primary); background: var(--bg-hover); }
+        .nl.active { color: var(--text-accent); background: var(--yellow-glow); }
+        .main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .title { font-family: 'Comfortaa', cursive; font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
+        .msg { font-family: 'Quicksand', sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; background: var(--bg-card); border-left: 3px solid var(--yellow); padding: 0.6rem 1rem; margin-bottom: 1.2rem; border-radius: 0 10px 10px 0; color: var(--text-accent); }
+        .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-card); }
         .table { width: 100%; border-collapse: collapse; }
-        .table th { font-family: 'Josefin Sans', sans-serif; font-size: .62rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); text-align: left; padding: .6rem 1rem; border-bottom: 2px solid var(--rule); }
-        .table td { padding: .85rem 1rem; border-bottom: 1px solid var(--rule); vertical-align: middle; }
-        .title-cell { font-family: 'Playfair Display', serif; font-size: .95rem; color: var(--ink); }
-        .date-cell { font-family: 'Josefin Sans', sans-serif; font-size: .62rem; letter-spacing: .08em; color: var(--muted); white-space: nowrap; }
-        .cat-badge { font-family: 'Josefin Sans', sans-serif; font-size: .58rem; letter-spacing: .15em; text-transform: uppercase; padding: .22rem .6rem; border: 1px solid var(--rule); color: var(--sienna); }
-        .del-btn { font-family: 'Josefin Sans', sans-serif; font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; background: none; border: 1px solid #e0c8b8; color: var(--sienna); padding: .3rem .8rem; cursor: pointer; transition: all .2s; }
-        .del-btn:hover { background: var(--sienna); color: var(--cream); border-color: var(--sienna); }
-        .empty { text-align: center; color: var(--muted); font-style: italic; padding: 2rem; }
+        .table th { font-family: 'Quicksand', sans-serif; font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); text-align: left; padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); background: var(--bg-elevated); }
+        .table td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .table tr:hover td { background: var(--bg-hover); }
+        .tc { font-family: 'Comfortaa', cursive; font-size: 0.85rem; }
+        .dc { font-family: 'Quicksand', sans-serif; font-size: 0.58rem; letter-spacing: 0.06em; color: var(--text-muted); white-space: nowrap; }
+        .badge { font-family: 'Quicksand', sans-serif; font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.18rem 0.5rem; border: 1px solid var(--border-accent); border-radius: 20px; color: var(--text-accent); }
+        .del { font-family: 'Quicksand', sans-serif; font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; background: none; border: 1px solid var(--border-accent); color: var(--orange); padding: 0.28rem 0.7rem; border-radius: 8px; cursor: pointer; transition: var(--transition); }
+        .del:hover { background: rgba(232,152,90,0.12); }
+        .empty { text-align: center; color: var(--text-muted); font-style: italic; padding: 2rem; }
+        @media (max-width: 550px) { .hdr-inner { height: auto; padding: 0.6rem 0; flex-direction: column; gap: 0.4rem; } }
       `}</style>
     </>
   )
 }
 
 export async function getServerSideProps() {
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('id, title, category, created_at')
-    .order('created_at', { ascending: false })
+  const { data: posts } = await supabase.from('posts').select('id, title, category, created_at').order('created_at', { ascending: false })
   return { props: { posts: posts ?? [] } }
 }
