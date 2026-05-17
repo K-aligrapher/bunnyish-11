@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 const CATS = ['Short Story', 'Flash Fiction', 'Essay', 'Poetry', 'Personal']
 const MAX_IMAGES = 10
 const MAX_SIZE_MB = 2
+const ADMIN_PW = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || ''
 
 function compressImage(file) {
   return new Promise((resolve) => {
@@ -19,8 +20,7 @@ function compressImage(file) {
         let w = img.width, h = img.height
         if (w > MAX_W) { h = (h * MAX_W) / w; w = MAX_W }
         canvas.width = w; canvas.height = h
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0, w, h)
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
         resolve(canvas.toDataURL('image/webp', 0.8))
       }
       img.src = e.target.result
@@ -29,52 +29,83 @@ function compressImage(file) {
   })
 }
 
+/* Password gate styles (shared between write and admin) */
+const pwStyles = `
+  .pw-page { min-height: 100vh; background: var(--bg-deep); display: grid; place-items: center; padding: 1.5rem; }
+  .pw-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; text-align: center; max-width: 360px; width: 100%; box-shadow: var(--shadow-card); }
+  .pw-bunny { font-size: 3rem; margin-bottom: 0.5rem; animation: bounce 2s ease-in-out infinite; }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .pw-title { font-family: 'Comfortaa', cursive; font-size: 1.6rem; font-weight: 700; background: var(--gradient-brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.3rem; }
+  .pw-sub { font-family: 'Quicksand', sans-serif; font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 1.5rem; }
+  .pw-form { display: flex; flex-direction: column; gap: 0.7rem; }
+  .pw-input { font-size: 0.9rem; padding: 0.7rem 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-primary); border-radius: var(--radius); outline: none; transition: var(--transition); font-family: inherit; }
+  .pw-input:focus { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow-glow); }
+  .pw-btn { font-family: 'Quicksand', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; background: var(--gradient-brand); color: #fff; border: none; padding: 0.7rem; border-radius: var(--radius); cursor: pointer; transition: var(--transition); }
+  .pw-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .pw-err { font-family: 'Quicksand', sans-serif; font-size: 0.7rem; color: #d45; margin-top: 0.5rem; }
+  .pw-back { display: inline-block; margin-top: 1.2rem; font-family: 'Quicksand', sans-serif; font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em; transition: var(--transition); }
+  .pw-back:hover { color: var(--text-accent); }
+`
+
 export default function Write() {
   const router = useRouter()
+
+  // Auth state
+  const [authed, setAuthed] = useState(false)
+  const [pw, setPw] = useState('')
+  const [pwError, setPwError] = useState('')
+
+  // Form state (all hooks declared unconditionally)
   const [form, setForm] = useState({ title: '', category: 'Short Story', excerpt: '', body: '' })
-  const [images, setImages] = useState([]) // { id, dataUrl, caption }
+  const [images, setImages] = useState([])
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileRef = useRef(null)
   const textRef = useRef(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('bunnyish-auth') === 'true') {
+      setAuthed(true)
+    }
+  }, [])
+
   const wordCount = form.body.split(/\s+/).filter(Boolean).length
+
+  function handleLogin(e) {
+    e.preventDefault()
+    if (pw === ADMIN_PW) {
+      sessionStorage.setItem('bunnyish-auth', 'true')
+      setAuthed(true); setPwError('')
+    } else {
+      setPwError('Wrong password! 🐰')
+    }
+  }
 
   const addImages = useCallback(async (files) => {
     const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'))
     if (newFiles.length === 0) return
-    if (images.length + newFiles.length > MAX_IMAGES) {
-      setError(`Maximum ${MAX_IMAGES} images allowed.`)
-      return
-    }
+    if (images.length + newFiles.length > MAX_IMAGES) { setError(`Maximum ${MAX_IMAGES} images allowed.`); return }
     setError('')
     const processed = []
     for (const file of newFiles) {
-      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-        setError(`"${file.name}" exceeds ${MAX_SIZE_MB}MB limit, skipping.`)
-        continue
-      }
+      if (file.size > MAX_SIZE_MB * 1024 * 1024) { setError(`"${file.name}" exceeds ${MAX_SIZE_MB}MB limit, skipping.`); continue }
       const dataUrl = await compressImage(file)
       processed.push({ id: Date.now() + Math.random(), dataUrl, caption: '' })
     }
     setImages(prev => [...prev, ...processed])
   }, [images.length])
 
-  // Paste handler
   const handlePaste = useCallback((e) => {
     const items = e.clipboardData?.items
     if (!items) return
     const imageFiles = []
     for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        e.preventDefault()
-        imageFiles.push(item.getAsFile())
-      }
+      if (item.type.startsWith('image/')) { e.preventDefault(); imageFiles.push(item.getAsFile()) }
     }
     if (imageFiles.length > 0) addImages(imageFiles)
   }, [addImages])
 
-  // Drop handler
   const handleDrop = useCallback((e) => {
     e.preventDefault(); setDragOver(false)
     addImages(e.dataTransfer.files)
@@ -87,8 +118,6 @@ export default function Write() {
     if (!form.title.trim() || !form.body.trim()) { setError('Please add at least a title and story body.'); return }
     if (!supabase) { setError('Supabase not configured. Check your .env.local file.'); return }
     setError(''); setSaving(true)
-
-    // Save images as text-only references (no base64 in DB to avoid size limits)
     let fullBody = form.body.trim()
     if (images.length > 0) {
       fullBody += '\n\n---IMAGES---\n'
@@ -97,27 +126,41 @@ export default function Write() {
         if (img.caption) fullBody += `[CAPTION]${img.caption}[/CAPTION]\n`
       })
     }
-
     try {
       const { error: dbError } = await supabase.from('posts').insert({
         title: form.title.trim(), category: form.category,
         excerpt: form.excerpt.trim() || form.body.trim().slice(0, 90) + '…',
         body: fullBody, thumb: Math.floor(Math.random() * 6),
       })
-      if (dbError) {
-        console.error('Supabase insert error:', dbError)
-        setError(`Save failed: ${dbError.message || dbError.code || 'Unknown error'}`)
-        setSaving(false)
-        return
-      }
+      if (dbError) { console.error('Supabase insert error:', dbError); setError(`Save failed: ${dbError.message || dbError.code || 'Unknown error'}`); setSaving(false); return }
       router.push('/?published=1')
-    } catch (err) {
-      console.error('Publish exception:', err)
-      setError(`Network error: ${err.message}`)
-      setSaving(false)
-    }
+    } catch (err) { console.error('Publish exception:', err); setError(`Network error: ${err.message}`); setSaving(false) }
   }
 
+  // ── PASSWORD GATE ──
+  if (!authed) {
+    return (
+      <>
+        <Head><title>Login · Bunnyish</title></Head>
+        <div className="pw-page">
+          <div className="pw-card">
+            <div className="pw-bunny">🐰</div>
+            <h2 className="pw-title">Bunnyish</h2>
+            <p className="pw-sub">Enter password to write</p>
+            <form onSubmit={handleLogin} className="pw-form">
+              <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="Password…" className="pw-input" autoFocus />
+              <button type="submit" className="pw-btn">Enter →</button>
+            </form>
+            {pwError && <p className="pw-err">{pwError}</p>}
+            <Link href="/" className="pw-back">← Back to Home</Link>
+          </div>
+        </div>
+        <style jsx>{pwStyles}</style>
+      </>
+    )
+  }
+
+  // ── MAIN WRITE PAGE ──
   return (
     <>
       <Head><title>Write · Bunnyish</title></Head>
@@ -132,67 +175,30 @@ export default function Write() {
             </nav>
           </div>
         </header>
-
         <main className="main">
           <div className="editor">
             <h2 className="title">✏️ Write a New Story</h2>
             <div className="form">
               <div className="row">
-                <div className="fg">
-                  <label>Title *</label>
-                  <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Your story title…" />
-                </div>
-                <div className="fg">
-                  <label>Category</label>
-                  <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                    {CATS.map(c => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
+                <div className="fg"><label>Title *</label><input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Your story title…" /></div>
+                <div className="fg"><label>Category</label><select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>{CATS.map(c => <option key={c}>{c}</option>)}</select></div>
               </div>
-
-              <div className="fg">
-                <label>Excerpt <span className="opt">(teaser shown on cards)</span></label>
-                <input value={form.excerpt} onChange={e => setForm(f => ({ ...f, excerpt: e.target.value }))} placeholder="One enticing sentence…" />
-              </div>
-
+              <div className="fg"><label>Excerpt <span className="opt">(teaser shown on cards)</span></label><input value={form.excerpt} onChange={e => setForm(f => ({ ...f, excerpt: e.target.value }))} placeholder="One enticing sentence…" /></div>
               <div className="fg">
                 <label>Your Story *</label>
-                <textarea
-                  ref={textRef}
-                  value={form.body}
-                  onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
-                  placeholder="Begin your story here… (you can paste images with Ctrl+V!)"
-                  rows={16}
-                />
+                <textarea ref={textRef} value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} placeholder="Begin your story here… (you can paste images with Ctrl+V!)" rows={16} />
                 <span className="wc">{wordCount} words · ~{Math.max(1, Math.ceil(wordCount / 200))} min read</span>
               </div>
-
-              {/* ── IMAGE UPLOAD AREA ── */}
               <div className="img-section">
                 <label className="img-label">📷 Images</label>
-                <div
-                  className={`drop-zone ${dragOver ? 'drag-active' : ''}`}
-                  onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileRef.current?.click()}
-                >
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    style={{ display: 'none' }}
-                    onChange={e => { addImages(e.target.files); e.target.value = '' }}
-                  />
+                <div className={`drop-zone ${dragOver ? 'drag-active' : ''}`} onDragOver={e => { e.preventDefault(); setDragOver(true) }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop} onClick={() => fileRef.current?.click()}>
+                  <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => { addImages(e.target.files); e.target.value = '' }} />
                   <div className="drop-content">
                     <span className="drop-icon">🖼️</span>
                     <p className="drop-text">Drop images here, click to browse, or <strong>paste (Ctrl+V)</strong></p>
-                    <p className="drop-hint">Max {MAX_SIZE_MB}MB per image · up to {MAX_IMAGES} images · JPG, PNG, GIF, WebP</p>
+                    <p className="drop-hint">Max {MAX_SIZE_MB}MB per image · up to {MAX_IMAGES} images</p>
                   </div>
                 </div>
-
-                {/* Image preview grid */}
                 {images.length > 0 && (
                   <div className="img-grid">
                     {images.map((img, i) => (
@@ -202,33 +208,22 @@ export default function Write() {
                           <button className="img-remove" onClick={() => removeImage(img.id)} title="Remove">✕</button>
                           <span className="img-num">{i + 1}</span>
                         </div>
-                        <input
-                          className="img-caption"
-                          value={img.caption}
-                          onChange={e => updateCaption(img.id, e.target.value)}
-                          placeholder="Add a caption…"
-                        />
+                        <input className="img-caption" value={img.caption} onChange={e => updateCaption(img.id, e.target.value)} placeholder="Add a caption…" />
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-
               {error && <p className="err">{error}</p>}
-
               <div className="actions">
-                <button className="pub" onClick={handlePublish} disabled={saving}>
-                  {saving ? 'Publishing…' : `Publish Story${images.length > 0 ? ` (${images.length} image${images.length > 1 ? 's' : ''})` : ''} →`}
-                </button>
+                <button className="pub" onClick={handlePublish} disabled={saving}>{saving ? 'Publishing…' : `Publish Story${images.length > 0 ? ` (${images.length} img)` : ''} →`}</button>
                 <Link href="/" className="cancel">Cancel</Link>
               </div>
             </div>
           </div>
         </main>
-
-        <footer className="ft"><span>🐰 Bunnyish</span></footer>
+        <footer className="ft"><span>Bunnyish</span></footer>
       </div>
-
       <style jsx>{`
         .root { min-height: 100vh; background: var(--bg-deep); }
         .hdr { position: sticky; top: 0; z-index: 50; background: var(--header-bg); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0 1.5rem; }
@@ -239,7 +234,6 @@ export default function Write() {
         .nl { font-family: 'Quicksand', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); padding: 0.4rem 0.9rem; border-radius: 10px; transition: var(--transition); }
         .nl:hover { color: var(--text-primary); background: var(--bg-hover); }
         .nl.active { color: var(--text-accent); background: var(--yellow-glow); }
-
         .main { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
         .editor { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-card); }
         .title { font-family: 'Comfortaa', cursive; font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
@@ -251,59 +245,26 @@ export default function Write() {
         .fg input, .fg select, .fg textarea { font-size: 0.88rem; padding: 0.65rem 0.8rem; border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-primary); border-radius: var(--radius); outline: none; transition: var(--transition); resize: vertical; }
         .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow-glow); }
         .wc { font-family: 'Quicksand', sans-serif; font-size: 0.55rem; color: var(--text-muted); text-align: right; letter-spacing: 0.06em; }
-
-        /* IMAGE SECTION */
         .img-section { display: flex; flex-direction: column; gap: 0.6rem; }
         .img-label { font-family: 'Quicksand', sans-serif; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); }
-
-        .drop-zone {
-          border: 2px dashed var(--border-accent);
-          border-radius: var(--radius);
-          padding: 1.5rem;
-          cursor: pointer;
-          transition: var(--transition);
-          background: var(--bg-elevated);
-          text-align: center;
-        }
-        .drop-zone:hover, .drop-zone.drag-active {
-          border-color: var(--yellow);
-          background: var(--yellow-glow);
-        }
+        .drop-zone { border: 2px dashed var(--border-accent); border-radius: var(--radius); padding: 1.5rem; cursor: pointer; transition: var(--transition); background: var(--bg-elevated); text-align: center; }
+        .drop-zone:hover, .drop-zone.drag-active { border-color: var(--yellow); background: var(--yellow-glow); }
         .drop-content { pointer-events: none; }
         .drop-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
         .drop-text { font-family: 'Nunito', sans-serif; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
         .drop-text strong { color: var(--text-accent); }
         .drop-hint { font-family: 'Quicksand', sans-serif; font-size: 0.6rem; color: var(--text-muted); letter-spacing: 0.04em; }
-
         .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.8rem; margin-top: 0.3rem; }
         .img-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: var(--transition); }
         .img-card:hover { box-shadow: var(--shadow-hover); }
         .img-preview-wrap { position: relative; aspect-ratio: 4/3; overflow: hidden; }
         .img-preview { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .img-remove {
-          position: absolute; top: 4px; right: 4px;
-          width: 22px; height: 22px; border-radius: 50%;
-          background: rgba(0,0,0,0.6); color: #fff; border: none;
-          font-size: 0.65rem; cursor: pointer; display: grid; place-items: center;
-          transition: var(--transition); opacity: 0;
-        }
+        .img-remove { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: none; font-size: 0.65rem; cursor: pointer; display: grid; place-items: center; transition: var(--transition); opacity: 0; }
         .img-card:hover .img-remove { opacity: 1; }
         .img-remove:hover { background: #d45; }
-        .img-num {
-          position: absolute; bottom: 4px; left: 4px;
-          width: 20px; height: 20px; border-radius: 50%;
-          background: var(--yellow); color: #3a2a14;
-          font-family: 'Quicksand', sans-serif; font-size: 0.55rem; font-weight: 700;
-          display: grid; place-items: center;
-        }
-        .img-caption {
-          width: 100%; border: none; border-top: 1px solid var(--border);
-          padding: 0.4rem 0.5rem; font-size: 0.72rem;
-          background: transparent; color: var(--text-primary); outline: none;
-          font-family: 'Nunito', sans-serif;
-        }
+        .img-num { position: absolute; bottom: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--yellow); color: #3a2a14; font-family: 'Quicksand', sans-serif; font-size: 0.55rem; font-weight: 700; display: grid; place-items: center; }
+        .img-caption { width: 100%; border: none; border-top: 1px solid var(--border); padding: 0.4rem 0.5rem; font-size: 0.72rem; background: transparent; color: var(--text-primary); outline: none; font-family: 'Nunito', sans-serif; }
         .img-caption::placeholder { color: var(--text-muted); }
-
         .err { font-size: 0.7rem; color: #d45; }
         .actions { display: flex; gap: 0.8rem; align-items: center; margin-top: 0.3rem; }
         .pub { font-family: 'Quicksand', sans-serif; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; background: var(--gradient-brand); color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; cursor: pointer; transition: var(--transition); }
@@ -312,12 +273,7 @@ export default function Write() {
         .cancel { font-family: 'Quicksand', sans-serif; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); border: 1px solid var(--border); padding: 0.75rem 1.2rem; border-radius: 10px; transition: var(--transition); }
         .cancel:hover { border-color: var(--yellow); color: var(--text-accent); }
         .ft { border-top: 1px solid var(--border); padding: 1rem; text-align: center; font-family: 'Comfortaa', cursive; font-weight: 700; font-size: 0.9rem; margin-top: 2rem; }
-
-        @media (max-width: 550px) {
-          .row { grid-template-columns: 1fr; }
-          .hdr-inner { height: auto; padding: 0.6rem 0; flex-direction: column; gap: 0.4rem; }
-          .img-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
-        }
+        @media (max-width: 550px) { .row { grid-template-columns: 1fr; } .hdr-inner { height: auto; padding: 0.6rem 0; flex-direction: column; gap: 0.4rem; } .img-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); } }
       `}</style>
     </>
   )

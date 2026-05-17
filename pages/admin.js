@@ -1,11 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { supabase } from '../lib/supabase'
 
+const ADMIN_PW = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || ''
+
+const pwStyles = `
+  .pw-page { min-height: 100vh; background: var(--bg-deep); display: grid; place-items: center; padding: 1.5rem; }
+  .pw-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; text-align: center; max-width: 360px; width: 100%; box-shadow: var(--shadow-card); }
+  .pw-bunny { font-size: 3rem; margin-bottom: 0.5rem; animation: bounce 2s ease-in-out infinite; }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .pw-title { font-family: 'Comfortaa', cursive; font-size: 1.6rem; font-weight: 700; background: var(--gradient-brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.3rem; }
+  .pw-sub { font-family: 'Quicksand', sans-serif; font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 1.5rem; }
+  .pw-form { display: flex; flex-direction: column; gap: 0.7rem; }
+  .pw-input { font-size: 0.9rem; padding: 0.7rem 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-primary); border-radius: var(--radius); outline: none; transition: var(--transition); font-family: inherit; }
+  .pw-input:focus { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow-glow); }
+  .pw-btn { font-family: 'Quicksand', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; background: var(--gradient-brand); color: #fff; border: none; padding: 0.7rem; border-radius: var(--radius); cursor: pointer; transition: var(--transition); }
+  .pw-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .pw-err { font-family: 'Quicksand', sans-serif; font-size: 0.7rem; color: #d45; margin-top: 0.5rem; }
+  .pw-back { display: inline-block; margin-top: 1.2rem; font-family: 'Quicksand', sans-serif; font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em; transition: var(--transition); }
+  .pw-back:hover { color: var(--text-accent); }
+`
+
 export default function Admin({ posts: initialPosts }) {
+  const [authed, setAuthed] = useState(false)
+  const [pw, setPw] = useState('')
+  const [pwError, setPwError] = useState('')
   const [posts, setPosts] = useState(initialPosts)
   const [msg, setMsg] = useState('')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('bunnyish-auth') === 'true') {
+      setAuthed(true)
+    }
+  }, [])
+
+  function handleLogin(e) {
+    e.preventDefault()
+    if (pw === ADMIN_PW) {
+      sessionStorage.setItem('bunnyish-auth', 'true')
+      setAuthed(true); setPwError('')
+    } else {
+      setPwError('Wrong password! 🐰')
+    }
+  }
 
   async function handleDelete(id) {
     if (!window.confirm('Delete this story permanently?')) return
@@ -16,6 +54,30 @@ export default function Admin({ posts: initialPosts }) {
     setTimeout(() => setMsg(''), 3000)
   }
 
+  // ── PASSWORD GATE ──
+  if (!authed) {
+    return (
+      <>
+        <Head><title>Login · Bunnyish</title></Head>
+        <div className="pw-page">
+          <div className="pw-card">
+            <div className="pw-bunny">🐰</div>
+            <h2 className="pw-title">Bunnyish</h2>
+            <p className="pw-sub">Enter password for admin</p>
+            <form onSubmit={handleLogin} className="pw-form">
+              <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="Password…" className="pw-input" autoFocus />
+              <button type="submit" className="pw-btn">Enter →</button>
+            </form>
+            {pwError && <p className="pw-err">{pwError}</p>}
+            <Link href="/" className="pw-back">← Back to Home</Link>
+          </div>
+        </div>
+        <style jsx>{pwStyles}</style>
+      </>
+    )
+  }
+
+  // ── ADMIN PAGE ──
   return (
     <>
       <Head><title>Admin · Bunnyish</title></Head>

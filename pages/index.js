@@ -32,7 +32,7 @@ export default function Home({ posts: initialPosts }) {
     <>
       <Head>
         <title>Bunnyish — Stories, Poems & Blog</title>
-        <meta name="description" content="A cute personal journal of stories, poems, and blog posts" />
+        <meta name="description" content="A journal of stories, poems, and blog posts" />
       </Head>
 
       <div className="root">
@@ -128,7 +128,7 @@ export default function Home({ posts: initialPosts }) {
             {/* Post grid */}
             <div className="grid">
               {filtered.length === 0 && (
-                <div className="empty">No posts here yet… write your first story! 🐇</div>
+                <div className="empty">No posts here yet… write your first story!</div>
               )}
               {filtered.slice(1).map(p => (
                 <div key={p.id} className="card" onClick={() => setModal(p)}>

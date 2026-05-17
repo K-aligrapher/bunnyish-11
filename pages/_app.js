@@ -6,8 +6,7 @@ export const useTheme = () => useContext(ThemeContext)
 
 /* ─────────────────────────────────────────
    BUNNY ECG LOADER
-   Clean ECG line with two rabbit ears as peaks
-   Left ear is straight, right ear is bent/floppy
+   Continuous line: ECG beats → round ear → bent ear → ECG beats
    ───────────────────────────────────────── */
 function BunnyLoader({ theme }) {
   const [fadeOut, setFadeOut] = useState(false)
@@ -29,59 +28,45 @@ function BunnyLoader({ theme }) {
         <h1 className="loader-title">Bunnyish</h1>
         <p className="loader-sub" style={{ color: taglineColor }}>stories · poems · blog</p>
 
-        {/* ECG + Rabbit Ears SVG */}
         <div className="ecg-wrap">
-          <svg viewBox="0 0 1000 250" fill="none" className="ecg-svg" preserveAspectRatio="xMidYMid meet">
+          <svg viewBox="0 0 1000 300" fill="none" className="ecg-svg" preserveAspectRatio="xMidYMid meet">
             <path
               d={`
-                M 0 160
-                L 80 160
-                L 95 155
-                L 105 168
-                L 115 150
-                L 130 160
-                L 200 160
-                L 220 155
-                L 230 170
-                L 240 148
-                L 255 160
-                L 330 160
-                L 345 158
-                L 355 160
+                M 0 210
+                L 70 210
+                L 85 205  L 95 218  L 105 200  L 115 210
+                L 170 210
+                L 185 205  L 195 215  L 205 202  L 215 210
+                L 280 210
 
-                C 380 160 390 158 400 150
-                C 410 138 415 80 420 45
-                C 425 20 430 10 435 15
-                C 440 22 443 50 446 80
-                C 450 115 453 145 458 155
-                C 460 158 462 160 465 160
+                C 290 210, 310 208, 320 200
+                C 335 188, 345 140, 355 95
+                C 362 62, 368 35, 375 25
+                C 382 15, 388 18, 392 30
+                C 398 50, 402 85, 407 120
+                C 413 158, 418 185, 425 198
+                C 430 206, 435 210, 445 210
 
-                L 490 160
+                L 465 210
 
-                C 495 160 498 158 500 152
-                C 505 140 510 100 515 65
-                C 520 35 525 20 530 25
-                C 534 30 536 55 540 80
-                Q 548 120 555 135
-                C 558 142 562 155 570 160
-                Q 578 168 585 170
-                Q 592 172 598 165
-                C 602 160 605 160 610 160
+                C 470 208, 475 205, 478 198
+                C 484 182, 490 130, 498 80
+                C 504 45, 510 22, 516 18
+                C 520 15, 524 20, 528 32
+                C 534 52, 538 78, 542 105
+                C 548 140, 555 165, 562 178
+                C 568 188, 575 198, 585 208
+                C 592 215, 600 222, 610 228
+                C 620 234, 630 232, 638 225
+                C 645 218, 648 212, 650 210
 
-                L 660 160
-                L 675 155
-                L 685 168
-                L 695 148
-                L 710 160
-                L 780 160
-                L 795 158
-                L 805 163
-                L 815 155
-                L 830 160
-                L 920 160
-                L 935 157
-                L 945 160
-                L 1000 160
+                L 690 210
+                L 705 205  L 715 218  L 725 200  L 738 210
+                L 790 210
+                L 805 207  L 815 213  L 825 205  L 835 210
+                L 900 210
+                L 915 208  L 925 210
+                L 1000 210
               `}
               stroke={lineColor}
               strokeWidth="2.8"
@@ -105,7 +90,6 @@ function BunnyLoader({ theme }) {
         }
         .loader.out { opacity: 0; visibility: hidden; pointer-events: none; }
         .loader-content { display: flex; flex-direction: column; align-items: center; width: 90%; max-width: 700px; }
-
         .loader-title {
           font-family: 'Comfortaa', cursive; font-weight: 700;
           font-size: clamp(2rem, 5vw, 3.2rem);
@@ -118,22 +102,18 @@ function BunnyLoader({ theme }) {
           letter-spacing: 0.3em; text-transform: uppercase;
           margin-bottom: 1.5rem; animation: fadeUp 0.6s ease 0.4s both;
         }
-
         .ecg-wrap { width: 100%; animation: fadeUp 0.8s ease 0.5s both; }
         .ecg-svg { width: 100%; height: auto; overflow: visible; }
-
         .ecg-path {
-          stroke-dasharray: 2400;
-          stroke-dashoffset: 2400;
+          stroke-dasharray: 2600;
+          stroke-dashoffset: 2600;
           animation: draw 3s ease-in-out 0.6s forwards;
         }
-
         @keyframes draw { to { stroke-dashoffset: 0; } }
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-
         .dots { display: flex; gap: 6px; margin-top: 1.5rem; animation: fadeUp 0.6s ease 1s both; }
         .d {
           width: 5px; height: 5px; border-radius: 50%;
