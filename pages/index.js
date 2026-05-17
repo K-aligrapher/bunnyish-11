@@ -151,8 +151,8 @@ export default function Home({ posts: initialPosts }) {
 
         {/* ── FOOTER ── */}
         <footer className="footer">
-          <span className="f-brand">🐰 Bunnyish</span>
-          <span className="f-sub">Written with love · Powered by Supabase & Vercel</span>
+          <span className="f-brand">Bunnyish</span>
+          <span className="f-sub">Written with ^ ^</span>
         </footer>
 
         {/* ── MODAL ── */}
@@ -180,7 +180,7 @@ export default function Home({ posts: initialPosts }) {
                         <div className="m-images">
                           {imgMatches.map((m, i) => (
                             <figure key={i} className="m-fig">
-                              <img src={m[1]} alt={capMatches[i]?.[1] || `Image ${i+1}`} className="m-img" />
+                              <img src={m[1]} alt={capMatches[i]?.[1] || `Image ${i + 1}`} className="m-img" />
                               {capMatches[i]?.[1] && <figcaption className="m-figcap">{capMatches[i][1]}</figcaption>}
                             </figure>
                           ))}
