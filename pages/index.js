@@ -16,8 +16,8 @@ const CATEGORIES = [
   { key: 'all', label: 'All Posts', icon: '📋' },
   { key: 'Short Story', label: 'Stories', icon: '📖' },
   { key: 'Poetry', label: 'Poems', icon: '🌸' },
-  { key: 'Essay', label: 'Blog', icon: '✏️' },
-  { key: 'Flash Fiction', label: 'Flash Fiction', icon: '⚡' },
+  //{ key: 'Essay', label: 'Blog', icon: '✏️' },
+  //{ key: 'Flash Fiction', label: 'Flash Fiction', icon: '⚡' },
   { key: 'Personal', label: 'Personal', icon: '💭' },
 ]
 
